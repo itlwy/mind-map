@@ -120,6 +120,7 @@ import NodeAttachment from './NodeAttachment.vue'
 import NodeOuterFrame from './NodeOuterFrame.vue'
 import NodeTagStyle from './NodeTagStyle.vue'
 import Setting from './Setting.vue'
+import OrderNodeContent from './OrderNodeContent.vue'
 
 // 注册插件
 MindMap.usePlugin(MiniMap)
@@ -185,12 +186,14 @@ export default {
       mindMapData: null,
       prevImg: '',
       storeConfigTimer: null,
-      showDragMask: false
+      showDragMask: false,
+      maxNodeOrderIndex: 0,
     }
   },
   computed: {
     ...mapState({
       isZenMode: state => state.localConfig.isZenMode,
+      isUseCustomNodeContent: state => state.localConfig.isUseCustomNodeContent,
       openNodeRichText: state => state.localConfig.openNodeRichText,
       isShowScrollbar: state => state.localConfig.isShowScrollbar,
       useLeftKeySelectionRightKeyDrag: state =>
@@ -202,6 +205,12 @@ export default {
     })
   },
   watch: {
+    isUseCustomNodeContent() {
+      this.mindMap.updateConfig({
+        isUseCustomNodeContent: this.isUseCustomNodeContent
+      })
+      this.mindMap.reRender()
+    },
     openNodeRichText() {
       if (this.openNodeRichText) {
         this.addRichTextPlugin()
@@ -349,6 +358,7 @@ export default {
         theme = exampleData.theme
         view = null
       }
+      const self = this; // 保存Vue实例的引用 
       this.mindMap = new MindMap({
         el: this.$refs.mindMapContainer,
         data: root,
@@ -376,6 +386,7 @@ export default {
         customHandleClipboardText: handleClipboardText,
         defaultNodeImage: require('../../../assets/img/图片加载失败.svg'),
         initRootNodePosition: ['center', 'center'],
+
         handleIsSplitByWrapOnPasteCreateNewNode: () => {
           return this.$confirm(
             this.$t('edit.splitByWrap'),
@@ -441,6 +452,21 @@ export default {
                 resolve(true)
               })
           })
+        },
+        isUseCustomNodeContent: this.isUseCustomNodeContent,
+        customCreateNodeContent: (node) => {
+          console.log(`customCreateNodeContent call, node = ${node.nodeData.data.text}, order = ${node.nodeData.data.orderIndex}`)
+          let el = document.createElement('div')
+          let Comp = Vue.extend(OrderNodeContent)
+          let comp = new Comp({
+            // props
+            propsData: {
+              node: node,
+              onCallback: self.onCustomItemClick
+            }
+          })
+          comp.$mount(el)
+          return comp.$el
         }
         // createNodePrefixContent: (node) => {
         //   const el = document.createElement('div')
@@ -584,37 +610,37 @@ export default {
       this.mindMap.keyCommand.addShortcut('Control+s', () => {
         this.manualSave()
       })
-      // 转发事件
-      ;[
-        'node_active',
-        'data_change',
-        'view_data_change',
-        'back_forward',
-        'node_contextmenu',
-        'node_click',
-        'draw_click',
-        'expand_btn_click',
-        'svg_mousedown',
-        'mouseup',
-        'mode_change',
-        'node_tree_render_end',
-        'rich_text_selection_change',
-        'transforming-dom-to-images',
-        'generalization_node_contextmenu',
-        'painter_start',
-        'painter_end',
-        'scrollbar_change',
-        'scale',
-        'translate',
-        'node_attachmentClick',
-        'node_attachmentContextmenu',
-        'demonstrate_jump',
-        'exit_demonstrate'
-      ].forEach(event => {
-        this.mindMap.on(event, (...args) => {
-          this.$bus.$emit(event, ...args)
+        // 转发事件
+        ;[
+          'node_active',
+          'data_change',
+          'view_data_change',
+          'back_forward',
+          'node_contextmenu',
+          'node_click',
+          'draw_click',
+          'expand_btn_click',
+          'svg_mousedown',
+          'mouseup',
+          'mode_change',
+          'node_tree_render_end',
+          'rich_text_selection_change',
+          'transforming-dom-to-images',
+          'generalization_node_contextmenu',
+          'painter_start',
+          'painter_end',
+          'scrollbar_change',
+          'scale',
+          'translate',
+          'node_attachmentClick',
+          'node_attachmentContextmenu',
+          'demonstrate_jump',
+          'exit_demonstrate'
+        ].forEach(event => {
+          this.mindMap.on(event, (...args) => {
+            this.$bus.$emit(event, ...args)
+          })
         })
-      })
       this.bindSaveEvent()
       this.testDynamicCreateNodes()
       // 如果应用被接管，那么抛出事件传递思维导图实例
@@ -633,6 +659,7 @@ export default {
       }
       // 协同测试
       this.cooperateTest()
+      this.initMaxNodeOrderIndex()
       // 销毁
       // setTimeout(() => {
       //   console.log('销毁')
@@ -650,7 +677,73 @@ export default {
       //   this.mindMap.render()
       // }, 5000)
     },
+    initMaxNodeOrderIndex() {
+      this.maxNodeOrderIndex = 0;
+      let root = this.mindMapData.root
+      if (root) {
+        // 创建一个栈来存储待访问的节点  
+        const stack = [{ node: root, index: root.data.orderIndex }];
+        let maxIndex = -Infinity;
+        // 当栈不为空时继续循环  
+        while (stack.length > 0) {
+          // 从栈中弹出一个元素  
+          const { node, index } = stack.pop();
 
+          // 更新最大 orderIndex  
+          if (index > maxIndex) {
+            maxIndex = index;
+          }
+
+          // 将子节点逆序压入栈中（因为栈是后进先出，所以逆序可以保证先访问左子树）  
+          for (let i = node.children.length - 1; i >= 0; i--) {
+            stack.push({ node: node.children[i], index: node.children[i].data.orderIndex });
+          }
+        }
+        if (maxIndex != -Infinity) {
+          this.maxNodeOrderIndex = maxIndex
+        }
+      }
+      console.log(`=======> initMaxNodeOrderIndex: ${this.maxNodeOrderIndex}`)
+    },
+    onCustomItemClick(node) {
+      let itemData = node.nodeData.data
+      console.log(`======> onCustomItemClick: ${itemData.orderIndex}, maxNodeOrderIndex=${this.maxNodeOrderIndex}`)
+      let targetOrderIndex = itemData.orderIndex;
+      if (!targetOrderIndex || targetOrderIndex <= 0) {
+        // 原本没顺序属性，直接添加
+        this.maxNodeOrderIndex += 1
+        node.nodeData.data.orderIndex = this.maxNodeOrderIndex
+        // this.mindMap.setData(root)
+      } else {
+        console.log(`======> onCustomItemClick 清空}`)
+        // 该节点有顺序属性，则清空该节点及之后的节点的顺序属性
+        let root = this.mindMap.renderer.root;
+        // let root = this.mindMapData.root
+        // 创建一个栈来存储待访问的节点  
+        const stack = [root];
+
+        // 当栈不为空时继续循环  
+        while (stack.length > 0) {
+          // 从栈中弹出一个节点  
+          const node = stack.pop();
+          // console.log(`======> 遍历过程：itemData.orderIndex=${targetOrderIndex}, ${node.data.text}, ${node.data.orderIndex}}`)
+          // 检查节点的 orderIndex 是否大于等于 targetOrderIndex  
+          if (node.nodeData.data.orderIndex >= targetOrderIndex) {
+            // 清空节点的 orderIndex 属性  
+            node.nodeData.data.orderIndex = null;
+          }
+
+          // 将子节点压入栈中以便后续访问  
+          for (let child of node.children) {
+            stack.push(child);
+          }
+        }
+        this.maxNodeOrderIndex = targetOrderIndex - 1 >= 0 ? targetOrderIndex - 1 : 0;
+        console.log(`======> onCustomItemClick: 遍历删除后 maxNodeOrderIndex = ${this.maxNodeOrderIndex}`)
+        // this.mindMap.setData(root)
+      }
+      this.mindMap.render()
+    },
     // url中是否存在要打开的文件
     hasFileURL() {
       const fileURL = this.$route.query.fileURL

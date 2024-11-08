@@ -181,6 +181,10 @@
         <span class="name">{{ $t('contextmenu.zenMode') }}</span>
         {{ isZenMode ? '√' : '' }}
       </div>
+      <div class="item" @click="exec('TOGGLE_CUSTOM_NODE_CONTENT')">
+        <span class="name">{{ $t('contextmenu.useCustomNodeContent') }}</span>
+        {{ isUseCustomNodeContent ? '√' : '' }}
+      </div>
       <div class="splitLine"></div>
       <div class="item" @click="exec('REMOVE_ALL_NODE_CUSTOM_STYLES')">
         <span class="name">{{
@@ -248,6 +252,7 @@ export default {
   computed: {
     ...mapState({
       isZenMode: state => state.localConfig.isZenMode,
+      isUseCustomNodeContent: state => state.localConfig.isUseCustomNodeContent,
       isDark: state => state.localConfig.isDark,
       supportNumbers: state => state.supportNumbers,
       supportCheckbox: state => state.supportCheckbox
@@ -453,6 +458,11 @@ export default {
         case 'TOGGLE_ZEN_MODE':
           this.setLocalConfig({
             isZenMode: !this.isZenMode
+          })
+          break
+        case 'TOGGLE_CUSTOM_NODE_CONTENT':
+          this.setLocalConfig({
+            isUseCustomNodeContent: !this.isUseCustomNodeContent
           })
           break
         case 'FIT_CANVAS':

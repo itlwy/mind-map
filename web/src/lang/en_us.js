@@ -106,6 +106,7 @@ export default {
     level5: 'Level5',
     level6: 'Level6',
     zenMode: 'Zen mode',
+    useCustomNodeContent: 'Order mode',
     fitCanvas: 'Fit canvas',
     removeImage: 'Remove image',
     removeHyperlink: 'Remove hyperlink',

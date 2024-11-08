@@ -30,6 +30,7 @@ export default {
   computed: {
     ...mapState({
       isZenMode: state => state.localConfig.isZenMode,
+      isUseCustomNodeContent: state => state.localConfig.isUseCustomNodeContent,
       isDark: state => state.localConfig.isDark,
       activeSidebar: state => state.activeSidebar
     })

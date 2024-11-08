@@ -12,6 +12,7 @@ const store = new Vuex.Store({
     localConfig: {
       // 本地配置
       isZenMode: false, // 是否是禅模式
+      isUseCustomNodeContent: false,  // 是否使用自定义节点内容
       // 是否开启节点富文本
       openNodeRichText: true,
       // 鼠标行为

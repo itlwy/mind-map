@@ -105,6 +105,7 @@ export default {
     level5: '第五層主題',
     level6: '第六層主題',
     zenMode: '禪模式',
+    useCustomNodeContent: '顺序模式',
     fitCanvas: '適應畫布',
     removeImage: '移除圖片',
     removeHyperlink: '移除超連結',
