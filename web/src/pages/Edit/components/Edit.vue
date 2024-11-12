@@ -1,16 +1,7 @@
 <template>
-  <div
-    class="editContainer"
-    @dragenter.stop.prevent="onDragenter"
-    @dragleave.stop.prevent
-    @dragover.stop.prevent
-    @drop.stop.prevent
-  >
-    <div
-      class="mindMapContainer"
-      id="mindMapContainer"
-      ref="mindMapContainer"
-    ></div>
+  <div class="editContainer" @dragenter.stop.prevent="onDragenter" @dragleave.stop.prevent @dragover.stop.prevent
+    @drop.stop.prevent>
+    <div class="mindMapContainer" id="mindMapContainer" ref="mindMapContainer"></div>
     <Count :mindMap="mindMap" v-if="!isZenMode"></Count>
     <Navigator v-if="mindMap" :mindMap="mindMap"></Navigator>
     <NavigatorToolbar :mindMap="mindMap" v-if="!isZenMode"></NavigatorToolbar>
@@ -22,10 +13,7 @@
     <ShortcutKey></ShortcutKey>
     <Contextmenu v-if="mindMap" :mindMap="mindMap"></Contextmenu>
     <RichTextToolbar v-if="mindMap" :mindMap="mindMap"></RichTextToolbar>
-    <NodeNoteContentShow
-      v-if="mindMap"
-      :mindMap="mindMap"
-    ></NodeNoteContentShow>
+    <NodeNoteContentShow v-if="mindMap" :mindMap="mindMap"></NodeNoteContentShow>
     <NodeAttachment v-if="mindMap" :mindMap="mindMap"></NodeAttachment>
     <NodeImgPreview v-if="mindMap" :mindMap="mindMap"></NodeImgPreview>
     <SidebarTrigger v-if="!isZenMode"></SidebarTrigger>
@@ -39,13 +27,8 @@
     <NodeOuterFrame v-if="mindMap" :mindMap="mindMap"></NodeOuterFrame>
     <NodeTagStyle v-if="mindMap" :mindMap="mindMap"></NodeTagStyle>
     <Setting :data="mindMapData" :mindMap="mindMap"></Setting>
-    <div
-      class="dragMask"
-      v-if="showDragMask"
-      @dragleave.stop.prevent="onDragleave"
-      @dragover.stop.prevent
-      @drop.stop.prevent="onDrop"
-    >
+    <div class="dragMask" v-if="showDragMask" @dragleave.stop.prevent="onDragleave" @dragover.stop.prevent
+      @drop.stop.prevent="onDrop">
       <div class="dragTip">{{ $t('edit.dragTip') }}</div>
     </div>
   </div>
@@ -327,6 +310,30 @@ export default {
         }, 300)
       })
     },
+    /**
+     * 绑定节点间的线的点击事件
+     */
+    bindNodeLineClickEvent() {
+      this.$bus.$on('node_line_clicked', (startNode, endNode) => {
+        // console.log(`=========> startNode: ${startNode.nodeData.data.text},endNode: ${endNode.nodeData.data.text}`)
+        this.mindMap.associativeLine.addLine(startNode, endNode)
+        const uid = `${startNode.getData('uid')}_${endNode.getData('uid')}`
+        const lineElement = document.getElementById(uid)
+        if (lineElement) {
+          window.requestAnimationFrame(() => {
+            // 创建一个dblclick事件  
+            var dblClickEvent = new MouseEvent('dblclick', {
+              'view': window,
+              'bubbles': true,
+              'cancelable': true
+            });
+            // 在元素上触发dblclick事件  
+            lineElement.dispatchEvent(dblClickEvent);
+          })
+
+        }
+      })
+    },
 
     /**
      * @Author: 王林
@@ -455,14 +462,17 @@ export default {
         },
         isUseCustomNodeContent: this.isUseCustomNodeContent,
         customCreateNodeContent: (node) => {
-          console.log(`customCreateNodeContent call, node = ${node.nodeData.data.text}, order = ${node.nodeData.data.orderIndex}`)
+          // console.log(`customCreateNodeContent call, node = ${node.nodeData.data.text}, order = ${node.nodeData.data.orderIndex}`)
           let el = document.createElement('div')
           let Comp = Vue.extend(OrderNodeContent)
           let comp = new Comp({
-            // props
             propsData: {
               node: node,
-              onCallback: self.onCustomItemClick
+              onCallback: self.onCustomItemClick,
+              customStyle:{
+                'color': node.getStyle('color', false),
+                'fontSize': node.getStyle('fontSize', false)
+              }
             }
           })
           comp.$mount(el)
@@ -610,6 +620,12 @@ export default {
       this.mindMap.keyCommand.addShortcut('Control+s', () => {
         this.manualSave()
       })
+      this.mindMap.keyCommand.addShortcut('Control+j', () => {
+        if (this.mindMap.renderer.activeNodeList.length <= 0) return
+        let node = this.mindMap.renderer.activeNodeList[0]
+        if (!node.children || node.children.length <= 0) return
+        this.mindMap.associativeLine.createLineFromActiveNode()
+      })
         // 转发事件
         ;[
           'node_active',
@@ -635,13 +651,15 @@ export default {
           'node_attachmentClick',
           'node_attachmentContextmenu',
           'demonstrate_jump',
-          'exit_demonstrate'
+          'exit_demonstrate',
+          'node_line_clicked'
         ].forEach(event => {
           this.mindMap.on(event, (...args) => {
             this.$bus.$emit(event, ...args)
           })
         })
       this.bindSaveEvent()
+      this.bindNodeLineClickEvent()
       this.testDynamicCreateNodes()
       // 如果应用被接管，那么抛出事件传递思维导图实例
       if (window.takeOverApp) {
@@ -703,46 +721,54 @@ export default {
           this.maxNodeOrderIndex = maxIndex
         }
       }
-      console.log(`=======> initMaxNodeOrderIndex: ${this.maxNodeOrderIndex}`)
+      // console.log(`=======> initMaxNodeOrderIndex: ${this.maxNodeOrderIndex}`)
     },
     onCustomItemClick(node) {
       let itemData = node.nodeData.data
-      console.log(`======> onCustomItemClick: ${itemData.orderIndex}, maxNodeOrderIndex=${this.maxNodeOrderIndex}`)
+      // console.log(`======> onCustomItemClick: ${itemData.orderIndex}, maxNodeOrderIndex=${this.maxNodeOrderIndex}`)
       let targetOrderIndex = itemData.orderIndex;
       if (!targetOrderIndex || targetOrderIndex <= 0) {
         // 原本没顺序属性，直接添加
         this.maxNodeOrderIndex += 1
         node.nodeData.data.orderIndex = this.maxNodeOrderIndex
-        // this.mindMap.setData(root)
+        this.mindMap.render()
       } else {
-        console.log(`======> onCustomItemClick 清空}`)
         // 该节点有顺序属性，则清空该节点及之后的节点的顺序属性
-        let root = this.mindMap.renderer.root;
-        // let root = this.mindMapData.root
-        // 创建一个栈来存储待访问的节点  
-        const stack = [root];
+        this.$confirm('将重置当前节点及之后的顺序', this.$t('theme.tip'), {
+          confirmButtonText: this.$t('dialog.confirm'),
+          cancelButtonText: this.$t('dialog.cancel'),
+          type: 'warning',
+          distinguishCancelAndClose: true,
+          callback: action => {
+            if (action === 'confirm') {
+              let root = this.mindMap.renderer.root;
+              // 创建一个栈来存储待访问的节点  
+              const stack = [root];
 
-        // 当栈不为空时继续循环  
-        while (stack.length > 0) {
-          // 从栈中弹出一个节点  
-          const node = stack.pop();
-          // console.log(`======> 遍历过程：itemData.orderIndex=${targetOrderIndex}, ${node.data.text}, ${node.data.orderIndex}}`)
-          // 检查节点的 orderIndex 是否大于等于 targetOrderIndex  
-          if (node.nodeData.data.orderIndex >= targetOrderIndex) {
-            // 清空节点的 orderIndex 属性  
-            node.nodeData.data.orderIndex = null;
-          }
+              // 当栈不为空时继续循环  
+              while (stack.length > 0) {
+                // 从栈中弹出一个节点  
+                const node = stack.pop();
+                // console.log(`======> 遍历过程：itemData.orderIndex=${targetOrderIndex}, ${node.data.text}, ${node.data.orderIndex}}`)
+                // 检查节点的 orderIndex 是否大于等于 targetOrderIndex  
+                if (node.nodeData.data.orderIndex >= targetOrderIndex) {
+                  // 清空节点的 orderIndex 属性  
+                  node.nodeData.data.orderIndex = null;
+                }
 
-          // 将子节点压入栈中以便后续访问  
-          for (let child of node.children) {
-            stack.push(child);
+                // 将子节点压入栈中以便后续访问  
+                for (let child of node.children) {
+                  stack.push(child);
+                }
+              }
+              this.maxNodeOrderIndex = targetOrderIndex - 1 >= 0 ? targetOrderIndex - 1 : 0;
+              // console.log(`======> onCustomItemClick: 遍历删除后 maxNodeOrderIndex = ${this.maxNodeOrderIndex}`)
+              // this.mindMap.setData(root)
+              this.mindMap.render()
+            }
           }
-        }
-        this.maxNodeOrderIndex = targetOrderIndex - 1 >= 0 ? targetOrderIndex - 1 : 0;
-        console.log(`======> onCustomItemClick: 遍历删除后 maxNodeOrderIndex = ${this.maxNodeOrderIndex}`)
-        // this.mindMap.setData(root)
+        })
       }
-      this.mindMap.render()
     },
     // url中是否存在要打开的文件
     hasFileURL() {

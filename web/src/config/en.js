@@ -239,6 +239,11 @@ export const shortcutKeyList = [
         value: `${ctrl} + G`
       },
       {
+        icon: 'iconguanlianxian',
+        name: 'Insert associativeLine',
+        value: `${ctrl} + J`
+      },
+      {
         icon: 'iconzhankai',
         name: 'Expand/UnExpand node',
         value: '/'

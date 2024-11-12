@@ -239,6 +239,11 @@ export const shortcutKeyList = [
         value: `${ctrl} + G`
       },
       {
+        icon: 'iconguanlianxian',
+        name: '插入关联线',
+        value: `${ctrl} + J`
+      },
+      {
         icon: 'iconzhankai',
         name: '展開／收合節點',
         value: '/'

@@ -86,6 +86,7 @@ export default {
     insertChildNode: '插入子節點',
     insertParentNode: '插入父節點',
     insertSummary: '插入概要',
+    insertAssociativeLine: '插入关联线',
     moveUpNode: '上移節點',
     moveDownNode: '下移節點',
     deleteNode: '刪除節點',

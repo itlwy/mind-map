@@ -1190,6 +1190,9 @@ class MindMapNode {
       enableMarker,
       childNode
     )
+    line.on('click', () => {
+      this.mindMap.emit('node_line_clicked', this, childNode)
+    });
   }
 
   // 获取彩虹线条颜色

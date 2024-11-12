@@ -196,7 +196,7 @@ class AssociativeLine {
           idToNode.set(data.uid, cur)
         }
       },
-      () => {},
+      () => { },
       true,
       0
     )
@@ -253,6 +253,7 @@ class AssociativeLine {
     clickPath
       .stroke({ width: associativeLineActiveWidth, color: 'transparent' })
       .fill({ color: 'none' })
+      .attr('id', `${node.getData('uid')}_${toNode.getData('uid')}`);
     clickPath.plot(pathStr)
     // 文字
     let text = this.createText({
@@ -280,7 +281,19 @@ class AssociativeLine {
     })
     // 双击进入关联线文本编辑状态
     clickPath.dblclick(() => {
-      if (!this.activeLine) return
+      // if (!this.activeLine) return
+      if (!this.activeLine) {
+        this.setActiveLine({
+          path,
+          clickPath,
+          text,
+          node,
+          toNode,
+          startPoint,
+          endPoint,
+          controlPoints
+        })
+      }
       this.showEditTextBox(text)
     })
     // 渲染关联线文字
@@ -554,8 +567,8 @@ class AssociativeLine {
       // 偏移量
       associativeLineTargetControlOffsets: associativeLineTargetControlOffsets
         ? associativeLineTargetControlOffsets.filter((_, index) => {
-            return index !== targetIndex
-          })
+          return index !== targetIndex
+        })
         : [],
       // 文本
       associativeLineText: newAssociativeLineText

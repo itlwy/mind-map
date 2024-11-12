@@ -1,58 +1,34 @@
 <template>
-  <div
-    class="contextmenuContainer listBox"
-    v-if="isShow"
-    ref="contextmenuRef"
-    :style="{ left: left + 'px', top: top + 'px' }"
-    :class="{ isDark: isDark }"
-  >
+  <div class="contextmenuContainer listBox" v-if="isShow" ref="contextmenuRef"
+    :style="{ left: left + 'px', top: top + 'px' }" :class="{ isDark: isDark }">
     <template v-if="type === 'node'">
-      <div
-        class="item"
-        @click="exec('INSERT_NODE', insertNodeBtnDisabled)"
-        :class="{ disabled: insertNodeBtnDisabled }"
-      >
+      <div class="item" @click="exec('INSERT_NODE', insertNodeBtnDisabled)"
+        :class="{ disabled: insertNodeBtnDisabled }">
         <span class="name">{{ $t('contextmenu.insertSiblingNode') }}</span>
         <span class="desc">Enter</span>
       </div>
-      <div
-        class="item"
-        @click="exec('INSERT_CHILD_NODE')"
-        :class="{ disabled: isGeneralization }"
-      >
+      <div class="item" @click="exec('INSERT_CHILD_NODE')" :class="{ disabled: isGeneralization }">
         <span class="name">{{ $t('contextmenu.insertChildNode') }}</span>
         <span class="desc">Tab</span>
       </div>
-      <div
-        class="item"
-        @click="exec('INSERT_PARENT_NODE')"
-        :class="{ disabled: insertNodeBtnDisabled }"
-      >
+      <div class="item" @click="exec('INSERT_PARENT_NODE')" :class="{ disabled: insertNodeBtnDisabled }">
         <span class="name">{{ $t('contextmenu.insertParentNode') }}</span>
         <span class="desc">Shift + Tab</span>
       </div>
-      <div
-        class="item"
-        @click="exec('ADD_GENERALIZATION')"
-        :class="{ disabled: insertNodeBtnDisabled }"
-      >
+      <div class="item" @click="exec('ADD_GENERALIZATION')" :class="{ disabled: insertNodeBtnDisabled }">
         <span class="name">{{ $t('contextmenu.insertSummary') }}</span>
         <span class="desc">Ctrl + G</span>
       </div>
+      <div class="item" @click="exec('INSERT_ASSOCIATIVELINE')" :class="{ disabled: canInsertAssociativeLine }">
+        <span class="name">{{ $t('contextmenu.insertAssociativeLine') }}</span>
+        <span class="desc">Ctrl + J</span>
+      </div>
       <div class="splitLine"></div>
-      <div
-        class="item"
-        @click="exec('UP_NODE')"
-        :class="{ disabled: upNodeBtnDisabled }"
-      >
+      <div class="item" @click="exec('UP_NODE')" :class="{ disabled: upNodeBtnDisabled }">
         <span class="name">{{ $t('contextmenu.moveUpNode') }}</span>
         <span class="desc">Ctrl + ↑</span>
       </div>
-      <div
-        class="item"
-        @click="exec('DOWN_NODE')"
-        :class="{ disabled: downNodeBtnDisabled }"
-      >
+      <div class="item" @click="exec('DOWN_NODE')" :class="{ disabled: downNodeBtnDisabled }">
         <span class="name">{{ $t('contextmenu.moveDownNode') }}</span>
         <span class="desc">Ctrl + ↓</span>
       </div>
@@ -62,28 +38,15 @@
       <div class="item" v-if="supportNumbers">
         <span class="name">{{ $t('contextmenu.number') }}</span>
         <span class="el-icon-arrow-right"></span>
-        <div
-          class="subItems listBox"
-          :class="{ isDark: isDark, showLeft: subItemsShowLeft }"
-          style="top: -170px"
-        >
-          <div
-            class="item"
-            v-for="item in numberTypeList"
-            :key="'type' + item.value"
-            @click="setNodeNumber('type', item.value)"
-          >
+        <div class="subItems listBox" :class="{ isDark: isDark, showLeft: subItemsShowLeft }" style="top: -170px">
+          <div class="item" v-for="item in numberTypeList" :key="'type' + item.value"
+            @click="setNodeNumber('type', item.value)">
             <span class="name">{{ item.name }}</span>
             {{ numberType === item.value ? '√' : '' }}
           </div>
           <div class="splitLine"></div>
-          <div
-            class="item"
-            v-for="item in numberLevelList"
-            :key="'level' + item.value"
-            :class="{ disabled: numberType === '' }"
-            @click="setNodeNumber('level', item.value)"
-          >
+          <div class="item" v-for="item in numberLevelList" :key="'level' + item.value"
+            :class="{ disabled: numberType === '' }" @click="setNodeNumber('level', item.value)">
             <span class="name">{{ item.name }}</span>
             {{ numberLevel === item.value ? '√' : '' }}
           </div>
@@ -92,7 +55,7 @@
       <div class="item" @click="setCheckbox" v-if="supportCheckbox">
         <span class="name">{{
           hasCheckbox ? $t('contextmenu.removeToDo') : $t('contextmenu.addToDo')
-        }}</span>
+          }}</span>
       </div>
       <div class="splitLine"></div>
       <div class="item danger" @click="exec('REMOVE_NODE')">
@@ -104,19 +67,11 @@
         <span class="desc">Shift + Backspace</span>
       </div>
       <div class="splitLine"></div>
-      <div
-        class="item"
-        @click="exec('COPY_NODE')"
-        :class="{ disabled: isGeneralization }"
-      >
+      <div class="item" @click="exec('COPY_NODE')" :class="{ disabled: isGeneralization }">
         <span class="name">{{ $t('contextmenu.copyNode') }}</span>
         <span class="desc">Ctrl + C</span>
       </div>
-      <div
-        class="item"
-        @click="exec('CUT_NODE')"
-        :class="{ disabled: isGeneralization }"
-      >
+      <div class="item" @click="exec('CUT_NODE')" :class="{ disabled: isGeneralization }">
         <span class="name">{{ $t('contextmenu.cutNode') }}</span>
         <span class="desc">Ctrl + X</span>
       </div>
@@ -153,17 +108,9 @@
       <div class="item">
         <span class="name">{{ $t('contextmenu.expandTo') }}</span>
         <span class="el-icon-arrow-right"></span>
-        <div
-          class="subItems listBox"
-          :class="{ isDark: isDark, showLeft: subItemsShowLeft }"
-          style="top: -10px"
-        >
-          <div
-            class="item"
-            v-for="(item, index) in expandList"
-            :key="item"
-            @click="exec('UNEXPAND_TO_LEVEL', false, index + 1)"
-          >
+        <div class="subItems listBox" :class="{ isDark: isDark, showLeft: subItemsShowLeft }" style="top: -10px">
+          <div class="item" v-for="(item, index) in expandList" :key="item"
+            @click="exec('UNEXPAND_TO_LEVEL', false, index + 1)">
             {{ item }}
           </div>
         </div>
@@ -189,22 +136,13 @@
       <div class="item" @click="exec('REMOVE_ALL_NODE_CUSTOM_STYLES')">
         <span class="name">{{
           $t('contextmenu.removeAllNodeCustomStyles')
-        }}</span>
+          }}</span>
       </div>
       <div class="item">
         <span class="name">{{ $t('contextmenu.copyToClipboard') }}</span>
         <span class="el-icon-arrow-right"></span>
-        <div
-          class="subItems listBox"
-          :class="{ isDark: isDark, showLeft: subItemsShowLeft }"
-          style="top: -130px"
-        >
-          <div
-            class="item"
-            v-for="item in copyList"
-            :key="item.value"
-            @click="copyToClipboard(item.value)"
-          >
+        <div class="subItems listBox" :class="{ isDark: isDark, showLeft: subItemsShowLeft }" style="top: -130px">
+          <div class="item" v-for="item in copyList" :key="item.value" @click="copyToClipboard(item.value)">
             {{ item.name }}
           </div>
         </div>
@@ -321,6 +259,9 @@ export default {
     },
     isGeneralization() {
       return this.node.isGeneralization
+    },
+    canInsertAssociativeLine() {
+      return !this.node.children || this.node.children.length <= 0
     },
     hasHyperlink() {
       return !!this.node.getData('hyperlink')
@@ -486,6 +427,9 @@ export default {
         case 'EXPAND_ALL':
           this.$bus.$emit('execCommand', key, this.node.uid)
           break
+        case 'INSERT_ASSOCIATIVELINE':
+          this.mindMap.associativeLine.createLineFromActiveNode()
+          break
         default:
           this.$bus.$emit('execCommand', key, ...args)
           break
@@ -526,8 +470,8 @@ export default {
         this.hasCheckbox
           ? null
           : {
-              done: false
-            }
+            done: false
+          }
       )
       this.hide()
     },
@@ -590,6 +534,7 @@ export default {
     background: #363b3f;
   }
 }
+
 .contextmenuContainer {
   position: fixed;
   font-size: 14px;

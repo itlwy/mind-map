@@ -87,6 +87,7 @@ export default {
     insertChildNode: 'Insert child node',
     insertParentNode: 'Insert parent node',
     insertSummary: 'Insert summary',
+    insertAssociativeLine: 'Insert associativeLine',
     moveUpNode: 'Move up node',
     moveDownNode: 'Move down node',
     deleteNode: 'Delete node',
