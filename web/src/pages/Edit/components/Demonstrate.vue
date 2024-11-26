@@ -1,50 +1,22 @@
 <template>
   <div class="demonstrateContainer" :class="{ isDark: isDark }">
-    <el-tooltip
-      class="item"
-      effect="dark"
-      :content="$t('demonstrate.demonstrate')"
-      placement="top"
-    >
+    <el-tooltip class="item" effect="dark" :content="$t('demonstrate.demonstrate')" placement="top">
       <div class="btn iconfont iconyanshibofang" @click="enterDemoMode"></div>
     </el-tooltip>
-    <div
-      class="exitDemonstrateBtn"
-      @click="exit"
-      ref="exitDemonstrateBtnRef"
-      v-if="isEnterDemonstrate"
-      @mousedown.stop
-      @mousemove.stop
-      @mouseup.stop
-    >
+    <div class="exitDemonstrateBtn" @click="exit" ref="exitDemonstrateBtnRef" v-if="isEnterDemonstrate" @mousedown.stop
+      @mousemove.stop @mouseup.stop>
       <span class="icon iconfont iconguanbi"></span>
     </div>
-    <div
-      class="stepBox"
-      ref="stepBoxRef"
-      v-if="isEnterDemonstrate"
-      @mousedown.stop
-      @mousemove.stop
-      @mouseup.stop
-    >
+    <div class="stepBox" ref="stepBoxRef" v-if="isEnterDemonstrate" @mousedown.stop @mousemove.stop @mouseup.stop>
       <div class="jump" @click="prev" :class="{ disabled: curStepIndex <= 0 }">
         <span class="icon el-icon-back"></span>
       </div>
       <div class="step">{{ curStepIndex + 1 }} / {{ totalStep }}</div>
-      <div
-        class="jump"
-        @click="next"
-        :class="{ disabled: curStepIndex >= totalStep - 1 }"
-      >
+      <div class="jump" @click="next" :class="{ disabled: curStepIndex >= totalStep - 1 }">
         <span class="icon el-icon-right"></span>
       </div>
       <div class="input">
-        <input
-          type="text"
-          v-model="inputStep"
-          @keyup.enter.stop="onEnter"
-          @keydown.stop
-        />
+        <input type="text" v-model="inputStep" @keyup.enter.stop="onEnter" @keydown.stop />
       </div>
     </div>
   </div>
@@ -74,6 +46,10 @@ export default {
   },
   methods: {
     enterDemoMode() {
+      if (window.takeOverApp && window.takeOverAppMethods && window.takeOverAppMethods.enterDemoMode) {
+        window.takeOverAppMethods.enterDemoMode(this.mindMap)
+        return;
+      }
       this.isEnterDemonstrate = true
       this.$nextTick(() => {
         const el = document.querySelector('#mindMapContainer')

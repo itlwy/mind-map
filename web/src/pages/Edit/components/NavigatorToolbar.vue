@@ -92,7 +92,7 @@
     <div class="item">
       <Demonstrate :isDark="isDark" :mindMap="mindMap"></Demonstrate>
     </div>
-    <div class="item">
+    <!-- <div class="item">
       <el-dropdown @command="handleCommand">
         <div class="btn iconfont iconbangzhu"></div>
         <el-dropdown-menu slot="dropdown">
@@ -104,7 +104,7 @@
           <el-dropdown-item disabled>当前：v{{ version }}</el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
-    </div>
+    </div> -->
   </div>
 </template>
 

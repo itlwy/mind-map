@@ -1,25 +1,32 @@
 <template>
-  <el-dialog
-    class="nodeNoteDialog"
-    :title="$t('nodeNote.title')"
-    :visible.sync="dialogVisible"
-    :width="isMobile ? '90%' : '50%'"
-    :top="isMobile ? '20px' : '15vh'"
-  >
-    <!-- <el-input
+  <!-- <el-dialog class="nodeNoteDialog" :title="$t('nodeNote.title')" :visible.sync="dialogVisible"
+    :width="isMobile ? '90%' : '50%'" :top="isMobile ? '20px' : '15vh'"> -->
+  <!-- <el-input
       type="textarea"
       :autosize="{ minRows: 3, maxRows: 5 }"
       placeholder="请输入内容"
       v-model="note"
     >
     </el-input> -->
-    <div class="noteEditor" ref="noteEditor" @keyup.stop @keydown.stop></div>
-    <!-- <div class="tip">换行请使用：Enter+Shift</div> -->
-    <span slot="footer" class="dialog-footer">
+  <!-- <div class="noteEditor" ref="noteEditor" @keyup.stop @keydown.stop></div> -->
+  <!-- <div class="tip">换行请使用：Enter+Shift</div> -->
+  <!-- <span slot="footer" class="dialog-footer">
       <el-button @click="cancel">{{ $t('dialog.cancel') }}</el-button>
       <el-button type="primary" @click="confirm">{{
         $t('dialog.confirm')
       }}</el-button>
+    </span>
+  </el-dialog> -->
+
+  <el-dialog title="please input..." :visible.sync="dialogVisible" width="50%">
+    <el-input type="textarea" :autosize="{ minRows: 3, maxRows: 5 }" placeholder="请输入内容" v-model="note" @keyup.native.stop @keydown.native.stop>
+    </el-input>
+
+    <span slot="footer" class="dialog-footer">
+      <el-button @click="dialogVisible = false">{{ $t('dialog.cancel') }}</el-button>
+      <el-button type="primary" @click="handleCustomDialogConfirm">{{
+        $t('dialog.confirm')
+        }}</el-button>
     </span>
   </el-dialog>
 </template>
@@ -61,6 +68,12 @@ export default {
     this.$bus.$off('showNodeNote', this.handleShowNodeNote)
   },
   methods: {
+    handleCustomDialogConfirm() {
+      this.activeNodes.forEach(node => {
+        node.setNote(this.note)
+      })
+      this.dialogVisible = false;
+    },
     handleNodeActive(...args) {
       this.activeNodes = [...args[1]]
       if (this.activeNodes.length > 0) {
@@ -72,11 +85,26 @@ export default {
     },
 
     handleShowNodeNote() {
-      this.$bus.$emit('startTextEdit')
       this.dialogVisible = true
-      this.$nextTick(() => {
-        this.initEditor()
-      })
+      // 使用非富文本形式
+      // 弹出输入框，提示用户输入内容
+      // let userInput = prompt('请输入备注:', this.note);
+
+      // // 检查用户是否点击了“取消”
+      // if (userInput !== null) {
+      //   this.note = userInput
+      //   this.activeNodes.forEach(node => {
+      //     node.setNote(this.note)
+      //   })
+      // } else {
+      //   console.log('用户取消了输入');
+      // }
+
+      // this.$bus.$emit('startTextEdit')
+      // this.dialogVisible = true
+      // this.$nextTick(() => {
+      //   this.initEditor()
+      // })
     },
 
     /**
