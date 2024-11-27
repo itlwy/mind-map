@@ -112,7 +112,7 @@
         <span class="icon iconfont iconflow-Mark"></span>
         <span class="text">{{ $t('toolbar.note') }}</span>
       </div>
-      <div
+      <!-- <div
         v-if="item === 'tag'"
         class="toolbarBtn"
         :class="{
@@ -122,8 +122,8 @@
       >
         <span class="icon iconfont iconbiaoqian"></span>
         <span class="text">{{ $t('toolbar.tag') }}</span>
-      </div>
-      <div
+      </div> -->
+      <!-- <div
         v-if="item === 'summary'"
         class="toolbarBtn"
         :class="{
@@ -133,7 +133,7 @@
       >
         <span class="icon iconfont icongaikuozonglan"></span>
         <span class="text">{{ $t('toolbar.summary') }}</span>
-      </div>
+      </div> -->
       <div
         v-if="item === 'associativeLine'"
         class="toolbarBtn"
@@ -145,7 +145,7 @@
         <span class="icon iconfont iconlianjiexian"></span>
         <span class="text">{{ $t('toolbar.associativeLine') }}</span>
       </div>
-      <div
+      <!-- <div
         v-if="item === 'formula'"
         class="toolbarBtn"
         :class="{
@@ -155,7 +155,7 @@
       >
         <span class="icon iconfont icongongshi"></span>
         <span class="text">{{ $t('toolbar.formula') }}</span>
-      </div>
+      </div> -->
       <div
         v-if="item === 'attachment'"
         class="toolbarBtn"
