@@ -469,7 +469,7 @@ export default {
             propsData: {
               node: node,
               onCallback: self.onCustomItemClick,
-              customStyle:{
+              customStyle: {
                 'color': node.getStyle('color', false),
                 'fontSize': node.getStyle('fontSize', false)
               }
@@ -729,9 +729,56 @@ export default {
       let targetOrderIndex = itemData.orderIndex;
       if (!targetOrderIndex || targetOrderIndex <= 0) {
         // 原本没顺序属性，直接添加
-        this.maxNodeOrderIndex += 1
-        node.nodeData.data.orderIndex = this.maxNodeOrderIndex
-        this.mindMap.render()
+        this.$prompt('请输入编号，默认值为尾部追加，当冲突时，将原冲突节点开始往后的统一后移。', this.$t('theme.tip'), {
+          inputType: 'number',
+          inputValue: this.maxNodeOrderIndex + 1,  // 设置默认数字
+          confirmButtonText: this.$t('dialog.confirm'),
+          cancelButtonText: this.$t('dialog.cancel'),
+        })
+          .then(({ value }) => {
+            // 用户点击确定后回调，value 为最终输入的数字
+            let targetValue = parseInt(value)
+            console.log('用户输入的数字：', targetValue);
+
+            let nextIndex = this.maxNodeOrderIndex + 1;
+            if (targetValue == nextIndex) {
+              node.nodeData.data.orderIndex = nextIndex
+            } else if (targetValue > nextIndex) {
+              this.$message.error('超过最大的索引值了!');
+              return;
+            } else {
+              // 需要操作顺序后移
+              let root = this.mindMap.renderer.root;
+              // 创建一个栈来存储待访问的节点  
+              const stack = [root];
+
+              // 当栈不为空时继续循环  
+              while (stack.length > 0) {
+                // 从栈中弹出一个节点
+                const node = stack.pop();
+
+                if (node.nodeData.data.orderIndex >= targetValue) {
+                  node.nodeData.data.orderIndex = node.nodeData.data.orderIndex + 1;
+                }
+
+                // 将子节点压入栈中以便后续访问  
+                for (let child of node.children) {
+                  stack.push(child);
+                }
+              }
+              node.nodeData.data.orderIndex = targetValue
+            }
+
+            this.maxNodeOrderIndex = nextIndex
+            this.mindMap.render()
+
+          })
+          .catch((error) => {
+            // 用户取消输入时的处理
+            // this.$message.info('用户取消了操作');
+            console.log(`用户取消了操作,error: ${error}`)
+          });
+
       } else {
         // 该节点有顺序属性，则清空该节点及之后的节点的顺序属性
         this.$confirm('将重置当前节点及之后的顺序', this.$t('theme.tip'), {
