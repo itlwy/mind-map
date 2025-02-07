@@ -336,6 +336,52 @@ export default {
     },
 
     /**
+     * 绑定监听节点删除事件
+     */
+    bindNodeDeleteEvent() {
+      this.$bus.$on('data_change_detail', (array) => {
+        if (!array  || array.length == 0) {
+          return;
+        }
+        // 1. 收集 删除类型 & node.orderIndex != null & node.orderIndex>0, 存储orderIndex的array1
+        // 2. 根据array1收集的 orderIndex，这儿每个orderIndex的删除会影响大于它的现有节点的index都减1，所以每个集合的每个元素都会让比它大的orderIndex的现有节点减1
+        let deletedOrderIndexArray = []
+        array.forEach((nodeData) => {
+          const orderIndex = nodeData.data.data.orderIndex
+          if (nodeData.action == 'delete' && orderIndex != null && orderIndex >= 0) {
+            deletedOrderIndexArray.push(orderIndex)
+          }
+        })
+        if(deletedOrderIndexArray.length ==0){
+          return;
+        }
+        let root = this.mindMap.renderer.root;
+        // 创建一个栈来存储待访问的节点  
+        const stack = [root];
+        let nextMaxNodeOrderIndex = this.maxNodeOrderIndex
+        // 当栈不为空时继续循环  
+        while (stack.length > 0) {
+          // 从栈中弹出一个节点
+          const node = stack.pop();
+          const targetOrderIndex = node.nodeData.data.orderIndex
+          deletedOrderIndexArray.forEach((itemOrderIndex) => {
+            if (targetOrderIndex > itemOrderIndex) {
+              node.nodeData.data.orderIndex = node.nodeData.data.orderIndex - 1;
+            }
+          })
+
+          // 将子节点压入栈中以便后续访问  
+          for (let child of node.children) {
+            stack.push(child);
+          }
+          nextMaxNodeOrderIndex = Math.max(nextMaxNodeOrderIndex, node.nodeData.data.orderIndex)
+        }
+        this.maxNodeOrderIndex = nextMaxNodeOrderIndex
+        this.mindMap.render()
+      })
+    },
+
+    /**
      * @Author: 王林
      * @Date: 2021-08-02 23:19:52
      * @Desc: 手动保存
@@ -652,7 +698,8 @@ export default {
           'node_attachmentContextmenu',
           'demonstrate_jump',
           'exit_demonstrate',
-          'node_line_clicked'
+          'node_line_clicked',
+          'data_change_detail'
         ].forEach(event => {
           this.mindMap.on(event, (...args) => {
             this.$bus.$emit(event, ...args)
@@ -660,6 +707,7 @@ export default {
         })
       this.bindSaveEvent()
       this.bindNodeLineClickEvent()
+      this.bindNodeDeleteEvent()
       this.testDynamicCreateNodes()
       // 如果应用被接管，那么抛出事件传递思维导图实例
       if (window.takeOverApp) {
